@@ -342,6 +342,19 @@
             transform: none;
         }
 
+        .disable-examples-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .disable-examples-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--primary-color);
+        }
+
         /* Study Interface */
         .study-interface {
             max-width: 1000px;
@@ -825,6 +838,11 @@
                     </button>
                 </div>
                 <div class="config-content">
+                    <div class="disable-examples-checkbox">
+                        <input type="checkbox" id="disableExamples">
+                        <label for="disableExamples">Disable example questions (use only uploaded questions)</label>
+                    </div>
+                    
                     <div class="config-option">
                         <label>Subject Area:</label>
                         <select id="subjectSelect">
@@ -913,6 +931,79 @@
 
                 <div id="explanationSection" class="explanation-section" style="display: none;">
                     <h4>Explanation:</h4>
+                    <p id="explanationText">No explanation available for this question.</p>
+                </div>
+
+                <div class="answer-actions">
+                    <button id="submitBtn" class="primary-btn" disabled>
+                        <i class="fas fa-check"></i>
+                        Submit Answer
+                    </button>
+                    <button id="nextBtn" class="primary-btn" style="display: none;">
+                        Next Question
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button id="hintBtn" class="secondary-btn">
+                        <i class="fas fa-lightbulb"></i>
+                        Hint
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="resultsModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-trophy"></i> Quiz Results</h3>
+                    <button id="closeResultsBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="results-content">
+                    <div id="scoreDisplay" class="score-display">0%</div>
+                    <div class="results-stats">
+                        <div class="stat-item">
+                            <div id="correctCount" class="stat-value">0</div>
+                            <div class="stat-label">Correct</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="incorrectCount" class="stat-value">0</div>
+                            <div class="stat-label">Incorrect</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="timeTaken" class="stat-value">0m</div>
+                            <div class="stat-label">Time Taken</div>
+                        </div>
+                        <div class="stat-item">
+                            <div id="accuracyRate" class="stat-value">0%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button id="retakeBtn" class="primary-btn">
+                            <i class="fas fa-redo"></i>
+                            Retake Quiz
+                        </button>
+                        <button id="reviewIncorrectBtn" class="secondary-btn">
+                            <i class="fas fa-eye"></i>
+                            Review Incorrect
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hint Modal -->
+        <div id="hintModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-lightbulb"></i> Hint</h3>
+                    <button id="closeHintBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div style="padding: 2rem;">
                     <p id="hintText">No hint available for this question.</p>
                 </div>
             </div>
@@ -923,7 +1014,7 @@
         // Enhanced Study App with all fixes and improvements
         class StudyApp {
             constructor() {
-                this.questions = [
+                this.defaultQuestions = [
                     {
                         id: 1,
                         subject: 'electronics-engineering',
@@ -1006,6 +1097,7 @@
                     }
                 ];
                 
+                this.uploadedQuestions = [];
                 this.currentMode = null;
                 this.currentQuestionIndex = 0;
                 this.selectedQuestions = [];
@@ -1023,6 +1115,14 @@
                 this.questionTimeLimit = 30; // seconds per question
                 
                 this.init();
+            }
+
+            get questions() {
+                const disableExamples = document.getElementById('disableExamples')?.checked || false;
+                if (disableExamples) {
+                    return this.uploadedQuestions.length > 0 ? this.uploadedQuestions : [];
+                }
+                return [...this.defaultQuestions, ...this.uploadedQuestions];
             }
             
             init() {
@@ -1055,6 +1155,10 @@
                 // Configuration modal
                 document.getElementById('closeConfigBtn').addEventListener('click', () => {
                     this.hideConfigModal();
+                });
+
+                document.getElementById('disableExamples').addEventListener('change', () => {
+                    this.updateAvailableCount();
                 });
                 
                 document.querySelectorAll('.limit-btn').forEach(btn => {
@@ -1497,8 +1601,6 @@
             }
             
             showResults(score, timeTaken) {
-                const totalQuestions = this.selectedQuestions.length;
-                
                 document.getElementById('scoreDisplay').textContent = `${score}%`;
                 document.getElementById('correctCount').textContent = this.studySession.correct;
                 document.getElementById('incorrectCount').textContent = this.studySession.incorrect;
@@ -1664,7 +1766,7 @@
                     if (savedQuestions) {
                         const parsed = JSON.parse(savedQuestions);
                         if (parsed.length > 0) {
-                            this.questions = parsed;
+                            this.uploadedQuestions = parsed;
                         }
                     }
                 } catch (e) {
@@ -1704,77 +1806,5 @@
         });
     </script>
 </body>
-</html>d="explanationText"></p>
-                </div>
-
-                <div class="answer-actions">
-                    <button id="submitBtn" class="primary-btn" disabled>
-                        <i class="fas fa-check"></i>
-                        Submit Answer
-                    </button>
-                    <button id="nextBtn" class="primary-btn" style="display: none;">
-                        Next Question
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button id="hintBtn" class="secondary-btn">
-                        <i class="fas fa-lightbulb"></i>
-                        Hint
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Results Modal -->
-        <div id="resultsModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3><i class="fas fa-trophy"></i> Quiz Results</h3>
-                    <button id="closeResultsBtn" class="close-btn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="results-content">
-                    <div id="scoreDisplay" class="score-display">0%</div>
-                    <div class="results-stats">
-                        <div class="stat-item">
-                            <div id="correctCount" class="stat-value">0</div>
-                            <div class="stat-label">Correct</div>
-                        </div>
-                        <div class="stat-item">
-                            <div id="incorrectCount" class="stat-value">0</div>
-                            <div class="stat-label">Incorrect</div>
-                        </div>
-                        <div class="stat-item">
-                            <div id="timeTaken" class="stat-value">0m</div>
-                            <div class="stat-label">Time Taken</div>
-                        </div>
-                        <div class="stat-item">
-                            <div id="accuracyRate" class="stat-value">0%</div>
-                            <div class="stat-label">Accuracy</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        <button id="retakeBtn" class="primary-btn">
-                            <i class="fas fa-redo"></i>
-                            Retake Quiz
-                        </button>
-                        <button id="reviewIncorrectBtn" class="secondary-btn">
-                            <i class="fas fa-eye"></i>
-                            Review Incorrect
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hint Modal -->
-        <div id="hintModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3><i class="fas fa-lightbulb"></i> Hint</h3>
-                    <button id="closeHintBtn" class="close-btn">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div style="padding: 2rem;">
-                    <p i
+</html>
+                    

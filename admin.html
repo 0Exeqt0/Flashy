@@ -35,6 +35,92 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            text-align: center;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .loading-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            margin: 2rem auto;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 2px;
+            animation: loading 3s ease-in-out;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: var(--success-color);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow);
+            animation: slideInRight 0.3s ease-out;
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            background: var(--danger-color);
+        }
+
+        .toast.warning {
+            background: var(--warning-color);
+        }
+
+        .toast.info {
+            background: var(--primary-color);
         }
 
         /* Navigation */
@@ -471,49 +557,6 @@
             box-shadow: var(--shadow);
         }
 
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            max-width: 400px;
-        }
-
-        .toast {
-            background: var(--success-color);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            box-shadow: var(--shadow);
-            animation: slideInRight 0.3s ease-out;
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .toast.error {
-            background: var(--danger-color);
-        }
-
-        .toast.warning {
-            background: var(--warning-color);
-        }
-
-        .toast.info {
-            background: var(--primary-color);
-        }
-
         /* Modal */
         .modal {
             position: fixed;
@@ -574,6 +617,22 @@
         }
 
         /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes slideInRight {
             from {
                 opacity: 0;
@@ -583,6 +642,17 @@
                 opacity: 1;
                 transform: translateX(0);
             }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
         }
 
         /* Responsive */
@@ -622,6 +692,18 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-shield-alt loading-icon"></i>
+            <h2>Admin Dashboard</h2>
+            <p>Loading...</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
 
@@ -1060,259 +1142,573 @@
     </div>
 
     <script>
-        // Default admin password (in a real app, this would be hashed and stored securely)
-        const ADMIN_PASSWORD = "admin123";
-        
-        // DOM elements
-        const loginScreen = document.getElementById('loginScreen');
-        const dashboard = document.getElementById('dashboard');
-        const loginForm = document.getElementById('loginForm');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const sidebarLinks = document.querySelectorAll('.sidebar-link');
-        const sections = document.querySelectorAll('.section-content');
-        const toastContainer = document.getElementById('toastContainer');
-        
-        // Check if user is already logged in
-        window.addEventListener('DOMContentLoaded', () => {
-            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-            if (isLoggedIn) {
-                showDashboard();
+        // API Simulation Layer
+        class QuestionAPI {
+            static STORAGE_KEYS = {
+                QUESTIONS: 'eeQuestions',
+                STATS: 'eeStudyStats',
+                ADMIN_PASSWORD: 'adminPassword'
+            };
+
+            // Get all questions
+            static getQuestions() {
+                try {
+                    const questions = localStorage.getItem(this.STORAGE_KEYS.QUESTIONS);
+                    return questions ? JSON.parse(questions) : [];
+                } catch (error) {
+                    console.error('Error retrieving questions:', error);
+                    return [];
+                }
+            }
+
+            // Save questions to storage
+            static saveQuestions(questions) {
+                try {
+                    localStorage.setItem(this.STORAGE_KEYS.QUESTIONS, JSON.stringify(questions));
+                    return true;
+                } catch (error) {
+                    console.error('Error saving questions:', error);
+                    return false;
+                }
+            }
+
+            // Add a new question
+            static addQuestion(questionData) {
+                const questions = this.getQuestions();
+                const newQuestion = {
+                    id: Date.now(), // Simple ID generation
+                    ...questionData,
+                    createdAt: new Date().toISOString()
+                };
+                
+                questions.push(newQuestion);
+                const success = this.saveQuestions(questions);
+                
+                return success ? newQuestion : null;
+            }
+
+            // Update an existing question
+            static updateQuestion(id, questionData) {
+                const questions = this.getQuestions();
+                const index = questions.findIndex(q => q.id === id);
+                
+                if (index === -1) return false;
+                
+                questions[index] = {
+                    ...questions[index],
+                    ...questionData,
+                    updatedAt: new Date().toISOString()
+                };
+                
+                return this.saveQuestions(questions);
+            }
+
+            // Delete a question
+            static deleteQuestion(id) {
+                const questions = this.getQuestions();
+                const filteredQuestions = questions.filter(q => q.id !== id);
+                return this.saveQuestions(filteredQuestions);
+            }
+
+            // Get stats
+            static getStats() {
+                try {
+                    const stats = localStorage.getItem(this.STORAGE_KEYS.STATS);
+                    return stats ? JSON.parse(stats) : {};
+                } catch (error) {
+                    console.error('Error retrieving stats:', error);
+                    return {};
+                }
+            }
+
+            // Update stats
+            static updateStats(stats) {
+                try {
+                    localStorage.setItem(this.STORAGE_KEYS.STATS, JSON.stringify(stats));
+                    return true;
+                } catch (error) {
+                    console.error('Error saving stats:', error);
+                    return false;
+                }
+            }
+
+            // Get admin password
+            static getAdminPassword() {
+                try {
+                    return localStorage.getItem(this.STORAGE_KEYS.ADMIN_PASSWORD) || 'admin123';
+                } catch (error) {
+                    console.error('Error retrieving admin password:', error);
+                    return 'admin123';
+                }
+            }
+
+            // Set admin password
+            static setAdminPassword(password) {
+                try {
+                    localStorage.setItem(this.STORAGE_KEYS.ADMIN_PASSWORD, password);
+                    return true;
+                } catch (error) {
+                    console.error('Error setting admin password:', error);
+                    return false;
+                }
+            }
+        }
+
+        // Admin App
+        class AdminApp {
+            constructor() {
+                this.currentSection = 'overview';
+                this.isLoggedIn = false;
+                this.questions = [];
+                this.stats = {};
+                
+                this.init();
             }
             
-            // Load dashboard data
-            updateDashboardStats();
-            loadQuestions();
-        });
-        
-        // Handle login form submission
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const password = document.getElementById('password').value;
-            
-            if (password === ADMIN_PASSWORD) {
-                localStorage.setItem('adminLoggedIn', 'true');
-                showDashboard();
-                showToast('Login successful!', 'success');
-            } else {
-                showToast('Invalid password. Please try again.', 'error');
+            init() {
+                this.showLoading();
+                setTimeout(() => {
+                    this.hideLoading();
+                    this.setupEventListeners();
+                    this.checkLoginStatus();
+                    this.loadData();
+                }, 1000);
             }
-        });
-        
-        // Handle logout
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem('adminLoggedIn');
-            showLoginScreen();
-            showToast('You have been logged out.', 'info');
-        });
-        
-        // Show dashboard and hide login screen
-        function showDashboard() {
-            loginScreen.style.display = 'none';
-            dashboard.style.display = 'grid';
-            logoutBtn.style.display = 'flex';
-        }
-        
-        // Show login screen and hide dashboard
-        function showLoginScreen() {
-            loginScreen.style.display = 'flex';
-            dashboard.style.display = 'none';
-            logoutBtn.style.display = 'none';
-        }
-        
-        // Handle sidebar navigation
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
+            
+            showLoading() {
+                document.getElementById('loadingScreen').style.display = 'flex';
+            }
+            
+            hideLoading() {
+                document.getElementById('loadingScreen').style.display = 'none';
+            }
+            
+            setupEventListeners() {
+                // Login form
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+                
+                // Logout button
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.handleLogout();
+                });
+                
+                // Sidebar navigation
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.showSection(link.dataset.section);
+                    });
+                });
+                
+                // Question form
+                document.getElementById('questionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addQuestion();
+                });
+                
+                // Edit question form
+                document.getElementById('editQuestionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.updateQuestion();
+                });
+                
+                // Filter questions
+                document.getElementById('filterSubject').addEventListener('change', () => {
+                    this.loadQuestionsTable();
+                });
+            }
+            
+            checkLoginStatus() {
+                const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+                if (isLoggedIn) {
+                    this.showDashboard();
+                }
+            }
+            
+            handleLogin() {
+                const password = document.getElementById('password').value;
+                const adminPassword = QuestionAPI.getAdminPassword();
+                
+                if (password === adminPassword) {
+                    localStorage.setItem('adminLoggedIn', 'true');
+                    this.isLoggedIn = true;
+                    this.showDashboard();
+                    this.showToast('Login successful!', 'success');
+                } else {
+                    this.showToast('Invalid password. Please try again.', 'error');
+                }
+            }
+            
+            handleLogout() {
+                localStorage.removeItem('adminLoggedIn');
+                this.isLoggedIn = false;
+                this.showLoginScreen();
+                this.showToast('You have been logged out.', 'info');
+            }
+            
+            showLoginScreen() {
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+            
+            showDashboard() {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'grid';
+                document.getElementById('logoutBtn').style.display = 'flex';
+                
+                this.loadData();
+                this.showSection('overview');
+            }
+            
+            showSection(section) {
+                this.currentSection = section;
                 
                 // Update active state
-                sidebarLinks.forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${section}"]`).classList.add('active');
                 
                 // Show the corresponding section
-                const sectionId = link.getAttribute('data-section') + '-section';
-                sections.forEach(section => {
+                document.querySelectorAll('.section-content').forEach(section => {
                     section.style.display = 'none';
                 });
-                document.getElementById(sectionId).style.display = 'block';
-            });
-        });
-        
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-                ${message}
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Trigger animation
-            setTimeout(() => toast.classList.add('show'), 10);
-            
-            // Remove toast after 5 seconds
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-        
-        // Update dashboard statistics
-        function updateDashboardStats() {
-            // In a real app, you would fetch this data from your backend
-            // For now, we'll use dummy data
-            document.getElementById('totalQuestions').textContent = '125';
-            document.getElementById('totalSessions').textContent = '342';
-            document.getElementById('avgAccuracy').textContent = '72%';
-            document.getElementById('totalStudyTime').textContent = '156h';
-        }
-        
-        // Load questions for the manage questions section
-        function loadQuestions() {
-            // In a real app, you would fetch this data from your backend
-            // For now, we'll use dummy data
-            const questions = [
-                {
-                    id: 1,
-                    question: "What is the value of π approximately?",
-                    subject: "mathematics",
-                    difficulty: "Easy"
-                },
-                {
-                    id: 2,
-                    question: "What does LED stand for?",
-                    subject: "electronics-engineering",
-                    difficulty: "Medium"
-                },
-                {
-                    id: 3,
-                    question: "What is Ohm's Law?",
-                    subject: "electronics-systems",
-                    difficulty: "Easy"
+                document.getElementById(`${section}-section`).style.display = 'block';
+                
+                // Load section-specific data
+                if (section === 'overview') {
+                    this.updateDashboardStats();
+                } else if (section === 'manage-questions') {
+                    this.loadQuestionsTable();
                 }
-            ];
+            }
             
-            const tableBody = document.getElementById('questionsTableBody');
-            tableBody.innerHTML = '';
+            loadData() {
+                this.questions = QuestionAPI.getQuestions();
+                this.stats = QuestionAPI.getStats();
+            }
             
-            questions.forEach(q => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${q.question}</td>
-                    <td><span class="subject-badge">${q.subject}</span></td>
-                    <td><span class="difficulty-badge ${q.difficulty.toLowerCase()}">${q.difficulty}</span></td>
-                    <td class="action-btns">
-                        <button class="action-btn edit-btn" onclick="openEditModal(${q.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete-btn" onclick="deleteQuestion(${q.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
+            updateDashboardStats() {
+                const totalQuestions = this.questions.length;
+                const totalSessions = this.stats.sessions || 0;
+                const totalCorrect = this.stats.totalCorrect || 0;
+                const totalIncorrect = this.stats.totalIncorrect || 0;
+                const totalAnswered = totalCorrect + totalIncorrect;
+                const avgAccuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+                const totalStudyTime = this.stats.totalStudyTime || 0;
+                
+                document.getElementById('totalQuestions').textContent = totalQuestions;
+                document.getElementById('totalSessions').textContent = totalSessions;
+                document.getElementById('avgAccuracy').textContent = `${avgAccuracy}%`;
+                document.getElementById('totalStudyTime').textContent = `${Math.round(totalStudyTime / 60)}h`;
+                
+                // Update recent activity
+                this.updateRecentActivity();
+            }
+            
+            updateRecentActivity() {
+                const activityContainer = document.getElementById('recentActivity');
+                
+                if (this.questions.length === 0) {
+                    activityContainer.innerHTML = '<p class="text-secondary">No recent activity to display.</p>';
+                    return;
+                }
+                
+                // Get recently added questions
+                const recentQuestions = [...this.questions]
+                    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                    .slice(0, 5);
+                
+                let html = '<div style="display: grid; gap: 0.5rem;">';
+                recentQuestions.forEach(question => {
+                    const date = new Date(question.createdAt || Date.now()).toLocaleDateString();
+                    html += `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 0.5rem;">
+                            <div>${question.question.substring(0, 50)}...</div>
+                            <div style="color: var(--text-secondary); font-size: 0.875rem;">${date}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                activityContainer.innerHTML = html;
+            }
+            
+            addQuestion() {
+                const questionData = {
+                    subject: document.getElementById('subject').value,
+                    difficulty: document.getElementById('difficulty').value,
+                    question: document.getElementById('questionText').value,
+                    options: {
+                        A: document.getElementById('optionA').value,
+                        B: document.getElementById('optionB').value,
+                        C: document.getElementById('optionC').value,
+                        D: document.getElementById('optionD').value
+                    },
+                    correctAnswer: document.getElementById('correctAnswer').value,
+                    explanation: document.getElementById('explanation').value,
+                    hint: document.getElementById('hint').value || ''
+                };
+                
+                const newQuestion = QuestionAPI.addQuestion(questionData);
+                
+                if (newQuestion) {
+                    this.questions.push(newQuestion);
+                    document.getElementById('questionForm').reset();
+                    this.showToast('Question added successfully!', 'success');
+                    this.updateDashboardStats();
+                } else {
+                    this.showToast('Failed to add question. Please try again.', 'error');
+                }
+            }
+            
+            loadQuestionsTable() {
+                const tableBody = document.getElementById('questionsTableBody');
+                const subjectFilter = document.getElementById('filterSubject').value;
+                
+                let filteredQuestions = this.questions;
+                if (subjectFilter) {
+                    filteredQuestions = filteredQuestions.filter(q => q.subject === subjectFilter);
+                }
+                
+                if (filteredQuestions.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No questions found. Add some questions to get started.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                filteredQuestions.forEach(question => {
+                    html += `
+                        <tr>
+                            <td>${question.question.substring(0, 70)}${question.question.length > 70 ? '...' : ''}</td>
+                            <td><span class="subject-badge">${question.subject}</span></td>
+                            <td><span class="difficulty-badge ${question.difficulty.toLowerCase()}">${question.difficulty}</span></td>
+                            <td class="action-btns">
+                                <button class="action-btn edit-btn" onclick="adminApp.openEditModal(${question.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="adminApp.deleteQuestion(${question.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tableBody.innerHTML = html;
+            }
+            
+            openEditModal(questionId) {
+                const question = this.questions.find(q => q.id === questionId);
+                if (!question) return;
+                
+                document.getElementById('editQuestionId').value = question.id;
+                document.getElementById('editSubject').value = question.subject;
+                document.getElementById('editDifficulty').value = question.difficulty;
+                document.getElementById('editQuestionText').value = question.question;
+                document.getElementById('editOptionA').value = question.options.A;
+                document.getElementById('editOptionB').value = question.options.B;
+                document.getElementById('editOptionC').value = question.options.C;
+                document.getElementById('editOptionD').value = question.options.D;
+                document.getElementById('editCorrectAnswer').value = question.correctAnswer;
+                document.getElementById('editExplanation').value = question.explanation || '';
+                document.getElementById('editHint').value = question.hint || '';
+                
+                document.getElementById('editModal').style.display = 'flex';
+            }
+            
+            closeEditModal() {
+                document.getElementById('editModal').style.display = 'none';
+            }
+            
+            updateQuestion() {
+                const questionId = parseInt(document.getElementById('editQuestionId').value);
+                const questionData = {
+                    subject: document.getElementById('editSubject').value,
+                    difficulty: document.getElementById('editDifficulty').value,
+                    question: document.getElementById('editQuestionText').value,
+                    options: {
+                        A: document.getElementById('editOptionA').value,
+                        B: document.getElementById('editOptionB').value,
+                        C: document.getElementById('editOptionC').value,
+                        D: document.getElementById('editOptionD').value
+                    },
+                    correctAnswer: document.getElementById('editCorrectAnswer').value,
+                    explanation: document.getElementById('editExplanation').value,
+                    hint: document.getElementById('editHint').value
+                };
+                
+                const success = QuestionAPI.updateQuestion(questionId, questionData);
+                
+                if (success) {
+                    // Update local questions array
+                    const index = this.questions.findIndex(q => q.id === questionId);
+                    if (index !== -1) {
+                        this.questions[index] = {
+                            ...this.questions[index],
+                            ...questionData,
+                            updatedAt: new Date().toISOString()
+                        };
+                    }
+                    
+                    this.closeEditModal();
+                    this.showToast('Question updated successfully!', 'success');
+                    this.loadQuestionsTable();
+                } else {
+                    this.showToast('Failed to update question. Please try again.', 'error');
+                }
+            }
+            
+            deleteQuestion(questionId) {
+                if (!confirm('Are you sure you want to delete this question?')) return;
+                
+                const success = QuestionAPI.deleteQuestion(questionId);
+                
+                if (success) {
+                    // Remove from local questions array
+                    this.questions = this.questions.filter(q => q.id !== questionId);
+                    
+                    this.showToast('Question deleted successfully!', 'success');
+                    this.loadQuestionsTable();
+                    this.updateDashboardStats();
+                } else {
+                    this.showToast('Failed to delete question. Please try again.', 'error');
+                }
+            }
+            
+            showToast(message, type = 'success') {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icons = {
+                    success: 'check-circle',
+                    error: 'exclamation-circle',
+                    warning: 'exclamation-triangle',
+                    info: 'info-circle'
+                };
+                
+                toast.innerHTML = `
+                    <i class="fas fa-${icons[type]}"></i>
+                    <span>${message}</span>
                 `;
-                tableBody.appendChild(row);
-            });
-        }
-        
-        // Open edit question modal
-        function openEditModal(questionId) {
-            // In a real app, you would fetch the question data
-            // For now, we'll use dummy data
-            const question = {
-                id: questionId,
-                questionText: "Sample question text?",
-                subject: "mathematics",
-                difficulty: "Easy",
-                optionA: "Option A",
-                optionB: "Option B",
-                optionC: "Option C",
-                optionD: "Option D",
-                correctAnswer: "A",
-                explanation: "This is the explanation",
-                hint: "This is a hint"
-            };
-            
-            // Populate the form
-            document.getElementById('editQuestionId').value = question.id;
-            document.getElementById('editSubject').value = question.subject;
-            document.getElementById('editDifficulty').value = question.difficulty;
-            document.getElementById('editQuestionText').value = question.questionText;
-            document.getElementById('editOptionA').value = question.optionA;
-            document.getElementById('editOptionB').value = question.optionB;
-            document.getElementById('editOptionC').value = question.optionC;
-            document.getElementById('editOptionD').value = question.optionD;
-            document.getElementById('editCorrectAnswer').value = question.correctAnswer;
-            document.getElementById('editExplanation').value = question.explanation;
-            document.getElementById('editHint').value = question.hint;
-            
-            // Show the modal
-            document.getElementById('editModal').style.display = 'flex';
-        }
-        
-        // Close edit question modal
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-        
-        // Delete question
-        function deleteQuestion(questionId) {
-            if (confirm('Are you sure you want to delete this question?')) {
-                // In a real app, you would send a request to your backend
-                showToast('Question deleted successfully.', 'success');
-                loadQuestions(); // Refresh the table
+                
+                const container = document.getElementById('toastContainer');
+                container.appendChild(toast);
+                
+                // Trigger animation
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 100);
+                
+                // Remove after delay
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }, 3000);
             }
         }
-        
-        // Handle edit question form submission
-        document.getElementById('editQuestionForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            // In a real app, you would send the updated data to your backend
-            showToast('Question updated successfully.', 'success');
-            closeEditModal();
-            loadQuestions(); // Refresh the table
-        });
-        
-        // Handle add question form submission
-        document.getElementById('questionForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            // In a real app, you would send the new question data to your backend
-            showToast('Question added successfully.', 'success');
-            e.target.reset(); // Reset the form
-        });
-        
-        // Change password function
+
+        // Global functions for HTML onclick attributes
         function changePassword() {
             const newPassword = document.getElementById('newPassword').value;
             if (newPassword) {
-                // In a real app, you would send this to your backend to update the password
-                showToast('Password updated successfully.', 'success');
-                document.getElementById('newPassword').value = '';
+                const success = QuestionAPI.setAdminPassword(newPassword);
+                if (success) {
+                    adminApp.showToast('Password updated successfully!', 'success');
+                    document.getElementById('newPassword').value = '';
+                } else {
+                    adminApp.showToast('Failed to update password.', 'error');
+                }
             } else {
-                showToast('Please enter a new password.', 'error');
+                adminApp.showToast('Please enter a new password.', 'error');
             }
         }
         
-        // Placeholder functions for other actions
         function exportQuestions() {
-            showToast('Export functionality would be implemented here.', 'info');
+            const questions = QuestionAPI.getQuestions();
+            const dataStr = JSON.stringify(questions, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'questions.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            adminApp.showToast('Questions exported successfully!', 'success');
         }
         
         function backupData() {
-            showToast('Backup functionality would be implemented here.', 'info');
+            const questions = QuestionAPI.getQuestions();
+            const stats = QuestionAPI.getStats();
+            
+            const backupData = {
+                questions,
+                stats,
+                backupDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `ee-study-helper-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            adminApp.showToast('Data backed up successfully!', 'success');
         }
         
         function clearStats() {
-            if (confirm('Are you sure you want to clear all statistics?')) {
-                showToast('Statistics cleared successfully.', 'success');
+            if (confirm('Are you sure you want to clear all statistics? This cannot be undone.')) {
+                QuestionAPI.updateStats({});
+                adminApp.stats = {};
+                adminApp.updateDashboardStats();
+                adminApp.showToast('Statistics cleared successfully!', 'success');
             }
         }
         
         function resetApp() {
-            if (confirm('WARNING: This will reset all application data. Are you sure?')) {
-                showToast('Application reset would be performed here.', 'info');
+            if (confirm('WARNING: This will reset ALL application data including questions and statistics. This cannot be undone. Are you sure?')) {
+                localStorage.removeItem(QuestionAPI.STORAGE_KEYS.QUESTIONS);
+                localStorage.removeItem(QuestionAPI.STORAGE_KEYS.STATS);
+                adminApp.questions = [];
+                adminApp.stats = {};
+                adminApp.updateDashboardStats();
+                adminApp.loadQuestionsTable();
+                adminApp.showToast('Application data has been reset!', 'success');
             }
         }
+        
+        function closeEditModal() {
+            adminApp.closeEditModal();
+        }
+
+        // Initialize admin app
+        let adminApp;
+        document.addEventListener('DOMContentLoaded', () => {
+            adminApp = new AdminApp();
+        });
+
+        // Make adminApp available globally for HTML onclick handlers
+        window.adminApp = adminApp;
     </script>
 </body>
 </html>

@@ -62,6 +62,90 @@
                         <h3>Review Mode</h3>
                         <p>Review missed questions</p>
                     </div>
+                    <div class="mode-card" data-mode="board-exam">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Board Exam Mode</h3>
+                        <p>Full exam simulation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quiz Configuration Modal -->
+        <div id="quizConfigModal" class="modal" style="display: none;">
+            <div class="modal-content quiz-config-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-cog"></i> Quiz Configuration</h3>
+                    <button id="closeQuizConfigBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="quiz-config-content">
+                    <div id="normalQuizConfig" class="config-section">
+                        <h4>Select Number of Questions</h4>
+                        <div class="question-count-options">
+                            <button class="count-btn" data-count="10">10 Questions</button>
+                            <button class="count-btn" data-count="30">30 Questions</button>
+                            <button class="count-btn" data-count="50">50 Questions</button>
+                            <button class="count-btn" data-count="100">100 Questions</button>
+                            <button class="count-btn" data-count="all">All Questions</button>
+                        </div>
+                        <div class="available-questions">
+                            <span id="availableQuestionsCount">Available: 0 questions</span>
+                        </div>
+                    </div>
+                    <div id="boardExamConfig" class="config-section" style="display: none;">
+                        <h4>Board Exam Schedule</h4>
+                        <div class="exam-schedule">
+                            <div class="exam-session">
+                                <div class="session-header">
+                                    <h5>Day 1 - Morning (8:00 AM - 12:00 PM)</h5>
+                                    <span class="session-duration">4 hours</span>
+                                </div>
+                                <div class="session-subject">Mathematics</div>
+                                <div class="session-questions" id="mathQuestions">0 questions available</div>
+                            </div>
+                            <div class="exam-session">
+                                <div class="session-header">
+                                    <h5>Day 1 - Afternoon (1:00 PM - 6:00 PM)</h5>
+                                    <span class="session-duration">5 hours</span>
+                                </div>
+                                <div class="session-subject">Electronics Engineering</div>
+                                <div class="session-questions" id="electronicsQuestions">0 questions available</div>
+                            </div>
+                            <div class="exam-session">
+                                <div class="session-header">
+                                    <h5>Day 2 - Morning (8:00 AM - 12:00 PM)</h5>
+                                    <span class="session-duration">4 hours</span>
+                                </div>
+                                <div class="session-subject">General Engineering and Applied Sciences</div>
+                                <div class="session-questions" id="generalQuestions">0 questions available</div>
+                            </div>
+                            <div class="exam-session">
+                                <div class="session-header">
+                                    <h5>Day 2 - Afternoon (1:00 PM - 6:00 PM)</h5>
+                                    <span class="session-duration">5 hours</span>
+                                </div>
+                                <div class="session-subject">Electronics Systems and Technologies</div>
+                                <div class="session-questions" id="systemsQuestions">0 questions available</div>
+                            </div>
+                        </div>
+                        <div class="board-exam-controls">
+                            <select id="boardExamSession" class="board-session-select">
+                                <option value="">Select Exam Session</option>
+                                <option value="mathematics">Day 1 Morning - Mathematics</option>
+                                <option value="electronics-engineering">Day 1 Afternoon - Electronics Engineering</option>
+                                <option value="general-engineering">Day 2 Morning - General Engineering</option>
+                                <option value="electronics-systems">Day 2 Afternoon - Electronics Systems</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-actions">
+                        <button id="startQuizBtn" class="primary-btn disabled">
+                            <i class="fas fa-play"></i>
+                            Start Quiz
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -120,15 +204,15 @@
                                 </div>
                             </div>
                             <div class="answer-actions">
-                                <button id="correctBtn" class="answer-btn correct">
+                                <button id="correctBtn" class="answer-btn correct" disabled>
                                     <i class="fas fa-check"></i>
                                     Correct
                                 </button>
-                                <button id="incorrectBtn" class="answer-btn incorrect">
+                                <button id="incorrectBtn" class="answer-btn incorrect" disabled>
                                     <i class="fas fa-times"></i>
                                     Incorrect
                                 </button>
-                                <button id="nextBtn" class="primary-btn">
+                                <button id="nextBtn" class="primary-btn" style="display: none;">
                                     Next Question
                                     <i class="fas fa-arrow-right"></i>
                                 </button>
@@ -157,123 +241,321 @@
 
         <!-- Admin Panel -->
         <div id="adminPanel" class="admin-panel" style="display: none;">
-            <div class="admin-header">
-                <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
-                <button id="closeAdminBtn" class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <!-- Admin Login -->
-            <div id="adminLogin" class="admin-login">
-                <div class="login-form">
-                    <h3>Enter Admin Password</h3>
-                    <input type="password" id="adminPassword" placeholder="Password">
-                    <button id="loginBtn" class="primary-btn">Login</button>
+            <div class="admin-container">
+                <div class="admin-header">
+                    <h2><i class="fas fa-shield-alt"></i> Admin Dashboard</h2>
+                    <button id="closeAdminBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            </div>
-
-            <!-- Admin Dashboard -->
-            <div id="adminDashboard" class="admin-dashboard" style="display: none;">
-                <div class="admin-tabs">
-                    <button class="admin-tab active" data-tab="add">Add Question</button>
-                    <button class="admin-tab" data-tab="manage">Manage Questions</button>
-                    <button class="admin-tab" data-tab="analytics">Analytics</button>
+                
+                <!-- Admin Login -->
+                <div id="adminLogin" class="admin-login">
+                    <div class="login-form">
+                        <div class="login-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3>Administrator Access</h3>
+                        <p>Enter your credentials to access the admin panel</p>
+                        <div class="input-group">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="adminPassword" placeholder="Enter password">
+                        </div>
+                        <button id="loginBtn" class="primary-btn login-btn">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Add Question Tab -->
-                <div id="addQuestionTab" class="tab-content active">
-                    <form id="questionForm" class="question-form">
-                        <div class="form-group">
-                            <label>Category:</label>
-                            <select id="category" required>
-                                <option value="">Select Category</option>
-                                <option value="circuit-analysis">Circuit Analysis</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="signals-systems">Signals & Systems</option>
-                                <option value="control-systems">Control Systems</option>
-                                <option value="power-systems">Power Systems</option>
-                                <option value="communications">Communications</option>
-                                <option value="digital-systems">Digital Systems</option>
-                                <option value="instrumentation">Instrumentation</option>
-                            </select>
+                <!-- Admin Dashboard -->
+                <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+                    <!-- Dashboard Overview -->
+                    <div class="dashboard-overview">
+                        <div class="overview-cards">
+                            <div class="overview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-question-circle"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Total Questions</h4>
+                                    <span id="totalQuestionsOverview" class="card-number">0</span>
+                                </div>
+                            </div>
+                            <div class="overview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Study Sessions</h4>
+                                    <span id="studySessionsOverview" class="card-number">0</span>
+                                </div>
+                            </div>
+                            <div class="overview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Avg. Score</h4>
+                                    <span id="avgScoreOverview" class="card-number">0%</span>
+                                </div>
+                            </div>
+                            <div class="overview-card">
+                                <div class="card-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h4>Total Study Time</h4>
+                                    <span id="totalTimeOverview" class="card-number">0h</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Difficulty:</label>
-                            <select id="difficultyLevel" required>
-                                <option value="Easy">Easy</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Hard">Hard</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Question:</label>
-                            <textarea id="questionInput" required placeholder="Enter your question here..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Answer:</label>
-                            <textarea id="answerInput" required placeholder="Enter the answer here..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Explanation (Optional):</label>
-                            <textarea id="explanationInput" placeholder="Provide detailed explanation..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Hint (Optional):</label>
-                            <input type="text" id="hintInput" placeholder="Provide a helpful hint...">
-                        </div>
-                        <button type="submit" class="primary-btn">
+                    </div>
+
+                    <div class="admin-tabs">
+                        <button class="admin-tab active" data-tab="add">
                             <i class="fas fa-plus"></i>
                             Add Question
                         </button>
-                    </form>
-                </div>
+                        <button class="admin-tab" data-tab="manage">
+                            <i class="fas fa-edit"></i>
+                            Manage Questions
+                        </button>
+                        <button class="admin-tab" data-tab="analytics">
+                            <i class="fas fa-chart-bar"></i>
+                            Analytics
+                        </button>
+                        <button class="admin-tab" data-tab="settings">
+                            <i class="fas fa-cogs"></i>
+                            Settings
+                        </button>
+                    </div>
 
-                <!-- Manage Questions Tab -->
-                <div id="manageQuestionsTab" class="tab-content">
-                    <div class="manage-header">
-                        <h3>Question Bank</h3>
-                        <div class="manage-controls">
-                            <select id="filterCategory">
-                                <option value="">All Categories</option>
-                                <option value="circuit-analysis">Circuit Analysis</option>
-                                <option value="electronics">Electronics</option>
-                                <option value="signals-systems">Signals & Systems</option>
-                                <option value="control-systems">Control Systems</option>
-                                <option value="power-systems">Power Systems</option>
-                                <option value="communications">Communications</option>
-                                <option value="digital-systems">Digital Systems</option>
-                                <option value="instrumentation">Instrumentation</option>
-                            </select>
-                            <button id="exportBtn" class="secondary-btn">
-                                <i class="fas fa-download"></i>
-                                Export
-                            </button>
+                    <!-- Add Question Tab -->
+                    <div id="addQuestionTab" class="tab-content active">
+                        <div class="form-container">
+                            <h3><i class="fas fa-plus-circle"></i> Add New Question</h3>
+                            <form id="questionForm" class="question-form">
+                                <div class="form-row">
+                                    <div class="form-group half">
+                                        <label><i class="fas fa-folder"></i> Subject:</label>
+                                        <select id="subject" required>
+                                            <option value="">Select Subject</option>
+                                            <option value="mathematics">Mathematics</option>
+                                            <option value="electronics-engineering">Electronics Engineering</option>
+                                            <option value="general-engineering">General Engineering and Applied Sciences</option>
+                                            <option value="electronics-systems">Electronics Systems and Technologies</option>
+                                            <option value="general">General</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group half">
+                                        <label><i class="fas fa-tags"></i> Category:</label>
+                                        <select id="category" required>
+                                            <option value="">Select Category</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group half">
+                                        <label><i class="fas fa-signal"></i> Difficulty:</label>
+                                        <select id="difficultyLevel" required>
+                                            <option value="Easy">Easy</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="Hard">Hard</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group half">
+                                        <label><i class="fas fa-hashtag"></i> Question ID:</label>
+                                        <input type="text" id="questionId" placeholder="Auto-generated" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-question"></i> Question:</label>
+                                    <textarea id="questionInput" required placeholder="Enter your question here..." rows="3"></textarea>
+                                    <div class="char-counter">
+                                        <span id="questionCharCount">0</span>/500 characters
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-check-circle"></i> Answer:</label>
+                                    <textarea id="answerInput" required placeholder="Enter the correct answer here..." rows="3"></textarea>
+                                    <div class="char-counter">
+                                        <span id="answerCharCount">0</span>/300 characters
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-info-circle"></i> Explanation (Optional):</label>
+                                    <textarea id="explanationInput" placeholder="Provide detailed explanation..." rows="4"></textarea>
+                                    <div class="char-counter">
+                                        <span id="explanationCharCount">0</span>/800 characters
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label><i class="fas fa-lightbulb"></i> Hint (Optional):</label>
+                                    <input type="text" id="hintInput" placeholder="Provide a helpful hint...">
+                                    <div class="char-counter">
+                                        <span id="hintCharCount">0</span>/150 characters
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" id="previewBtn" class="secondary-btn">
+                                        <i class="fas fa-eye"></i>
+                                        Preview
+                                    </button>
+                                    <button type="submit" class="primary-btn">
+                                        <i class="fas fa-save"></i>
+                                        Save Question
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                    <div id="questionsList" class="questions-list">
-                        <!-- Questions will be populated here -->
-                    </div>
-                </div>
 
-                <!-- Analytics Tab -->
-                <div id="analyticsTab" class="tab-content">
-                    <div class="analytics-grid">
-                        <div class="stat-card">
-                            <h4>Total Questions</h4>
-                            <span id="totalQuestions" class="stat-number">0</span>
+                    <!-- Manage Questions Tab -->
+                    <div id="manageQuestionsTab" class="tab-content">
+                        <div class="manage-header">
+                            <h3><i class="fas fa-database"></i> Question Bank Management</h3>
+                            <div class="manage-controls">
+                                <div class="filter-group">
+                                    <select id="filterSubject">
+                                        <option value="">All Subjects</option>
+                                        <option value="mathematics">Mathematics</option>
+                                        <option value="electronics-engineering">Electronics Engineering</option>
+                                        <option value="general-engineering">General Engineering</option>
+                                        <option value="electronics-systems">Electronics Systems</option>
+                                        <option value="general">General</option>
+                                    </select>
+                                    <select id="filterCategory">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                    <select id="filterDifficulty">
+                                        <option value="">All Difficulties</option>
+                                        <option value="Easy">Easy</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Hard">Hard</option>
+                                    </select>
+                                </div>
+                                <div class="action-buttons">
+                                    <button id="bulkDeleteBtn" class="danger-btn" disabled>
+                                        <i class="fas fa-trash-alt"></i>
+                                        Delete Selected
+                                    </button>
+                                    <button id="exportBtn" class="secondary-btn">
+                                        <i class="fas fa-download"></i>
+                                        Export
+                                    </button>
+                                    <button id="importBtn" class="secondary-btn">
+                                        <i class="fas fa-upload"></i>
+                                        Import
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h4>Study Sessions</h4>
-                            <span id="studySessions" class="stat-number">0</span>
+                        <div class="questions-stats">
+                            <div class="stat-item">
+                                <span>Total:</span>
+                                <strong id="totalQuestionsCount">0</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Filtered:</span>
+                                <strong id="filteredQuestionsCount">0</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Selected:</span>
+                                <strong id="selectedQuestionsCount">0</strong>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h4>Average Score</h4>
-                            <span id="averageScore" class="stat-number">0%</span>
+                        <div id="questionsList" class="questions-list">
+                            <!-- Questions will be populated here -->
                         </div>
-                        <div class="stat-card">
-                            <h4>Time Studied</h4>
-                            <span id="timeStudied" class="stat-number">0h</span>
+                    </div>
+
+                    <!-- Analytics Tab -->
+                    <div id="analyticsTab" class="tab-content">
+                        <div class="analytics-container">
+                            <h3><i class="fas fa-analytics"></i> Study Analytics</h3>
+                            <div class="analytics-grid">
+                                <div class="stat-card primary">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-question-circle"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h4>Total Questions</h4>
+                                        <span id="totalQuestions" class="stat-number">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card success">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-play"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h4>Study Sessions</h4>
+                                        <span id="studySessions" class="stat-number">0</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card warning">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-percentage"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h4>Average Score</h4>
+                                        <span id="averageScore" class="stat-number">0%</span>
+                                    </div>
+                                </div>
+                                <div class="stat-card info">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <h4>Time Studied</h4>
+                                        <span id="timeStudied" class="stat-number">0h</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="category-breakdown">
+                                <h4>Questions by Subject</h4>
+                                <div id="subjectBreakdown" class="breakdown-chart">
+                                    <!-- Subject breakdown will be shown here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="settingsTab" class="tab-content">
+                        <div class="settings-container">
+                            <h3><i class="fas fa-cogs"></i> Application Settings</h3>
+                            <div class="settings-section">
+                                <h4>Security Settings</h4>
+                                <div class="form-group">
+                                    <label>Change Admin Password:</label>
+                                    <div class="password-change">
+                                        <input type="password" id="currentPassword" placeholder="Current Password">
+                                        <input type="password" id="newPassword" placeholder="New Password">
+                                        <button id="changePasswordBtn" class="primary-btn">
+                                            <i class="fas fa-key"></i>
+                                            Update Password
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-section">
+                                <h4>Data Management</h4>
+                                <div class="data-actions">
+                                    <button id="backupDataBtn" class="secondary-btn">
+                                        <i class="fas fa-cloud-download-alt"></i>
+                                        Backup Data
+                                    </button>
+                                    <button id="clearStatsBtn" class="warning-btn">
+                                        <i class="fas fa-chart-bar"></i>
+                                        Clear Statistics
+                                    </button>
+                                    <button id="resetAllBtn" class="danger-btn">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        Reset All Data
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -314,10 +596,46 @@
             </div>
         </div>
 
-        <!-- Success Message -->
-        <div id="successMessage" class="success-message">
-            <i class="fas fa-check-circle"></i>
-            <span>Question added successfully!</span>
+        <!-- Enhanced Notifications -->
+        <div id="notificationContainer" class="notification-container">
+            <!-- Notifications will be dynamically added here -->
+        </div>
+
+        <!-- Question Preview Modal -->
+        <div id="previewModal" class="modal" style="display: none;">
+            <div class="modal-content preview-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-eye"></i> Question Preview</h3>
+                    <button id="closePreviewBtn" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="preview-content">
+                    <div class="preview-card">
+                        <div class="preview-header">
+                            <span class="preview-subject" id="previewSubject">Subject</span>
+                            <span class="preview-category" id="previewCategory">Category</span>
+                            <span class="preview-difficulty" id="previewDifficulty">Difficulty</span>
+                        </div>
+                        <div class="preview-question">
+                            <h4>Question:</h4>
+                            <p id="previewQuestionText"></p>
+                        </div>
+                        <div class="preview-answer">
+                            <h4>Answer:</h4>
+                            <p id="previewAnswerText"></p>
+                        </div>
+                        <div class="preview-explanation" id="previewExplanationSection">
+                            <h4>Explanation:</h4>
+                            <p id="previewExplanationText"></p>
+                        </div>
+                        <div class="preview-hint" id="previewHintSection">
+                            <h4>Hint:</h4>
+                            <p id="previewHintText"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Hint Modal -->

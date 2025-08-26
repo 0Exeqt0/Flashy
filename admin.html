@@ -1012,4 +1012,307 @@
                         <div class="form-group">
                             <label for="editOptionA">Option A:</label>
                             <input type="text" id="editOptionA" required>
-                        
+                        </div>
+                        <div class="form-group">
+                            <label for="editOptionB">Option B:</label>
+                            <input type="text" id="editOptionB" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editOptionC">Option C:</label>
+                            <input type="text" id="editOptionC" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editOptionD">Option D:</label>
+                            <input type="text" id="editOptionD" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editCorrectAnswer">Correct Answer:</label>
+                        <select id="editCorrectAnswer" required>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editExplanation">Explanation:</label>
+                        <textarea id="editExplanation"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editHint">Hint (Optional):</label>
+                        <input type="text" id="editHint">
+                    </div>
+
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default admin password (in a real app, this would be hashed and stored securely)
+        const ADMIN_PASSWORD = "admin123";
+        
+        // DOM elements
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('loginForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const sections = document.querySelectorAll('.section-content');
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+            if (isLoggedIn) {
+                showDashboard();
+            }
+            
+            // Load dashboard data
+            updateDashboardStats();
+            loadQuestions();
+        });
+        
+        // Handle login form submission
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('adminLoggedIn', 'true');
+                showDashboard();
+                showToast('Login successful!', 'success');
+            } else {
+                showToast('Invalid password. Please try again.', 'error');
+            }
+        });
+        
+        // Handle logout
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('adminLoggedIn');
+            showLoginScreen();
+            showToast('You have been logged out.', 'info');
+        });
+        
+        // Show dashboard and hide login screen
+        function showDashboard() {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'grid';
+            logoutBtn.style.display = 'flex';
+        }
+        
+        // Show login screen and hide dashboard
+        function showLoginScreen() {
+            loginScreen.style.display = 'flex';
+            dashboard.style.display = 'none';
+            logoutBtn.style.display = 'none';
+        }
+        
+        // Handle sidebar navigation
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Update active state
+                sidebarLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Show the corresponding section
+                const sectionId = link.getAttribute('data-section') + '-section';
+                sections.forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById(sectionId).style.display = 'block';
+            });
+        });
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                ${message}
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Remove toast after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+        
+        // Update dashboard statistics
+        function updateDashboardStats() {
+            // In a real app, you would fetch this data from your backend
+            // For now, we'll use dummy data
+            document.getElementById('totalQuestions').textContent = '125';
+            document.getElementById('totalSessions').textContent = '342';
+            document.getElementById('avgAccuracy').textContent = '72%';
+            document.getElementById('totalStudyTime').textContent = '156h';
+        }
+        
+        // Load questions for the manage questions section
+        function loadQuestions() {
+            // In a real app, you would fetch this data from your backend
+            // For now, we'll use dummy data
+            const questions = [
+                {
+                    id: 1,
+                    question: "What is the value of π approximately?",
+                    subject: "mathematics",
+                    difficulty: "Easy"
+                },
+                {
+                    id: 2,
+                    question: "What does LED stand for?",
+                    subject: "electronics-engineering",
+                    difficulty: "Medium"
+                },
+                {
+                    id: 3,
+                    question: "What is Ohm's Law?",
+                    subject: "electronics-systems",
+                    difficulty: "Easy"
+                }
+            ];
+            
+            const tableBody = document.getElementById('questionsTableBody');
+            tableBody.innerHTML = '';
+            
+            questions.forEach(q => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${q.question}</td>
+                    <td><span class="subject-badge">${q.subject}</span></td>
+                    <td><span class="difficulty-badge ${q.difficulty.toLowerCase()}">${q.difficulty}</span></td>
+                    <td class="action-btns">
+                        <button class="action-btn edit-btn" onclick="openEditModal(${q.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteQuestion(${q.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Open edit question modal
+        function openEditModal(questionId) {
+            // In a real app, you would fetch the question data
+            // For now, we'll use dummy data
+            const question = {
+                id: questionId,
+                questionText: "Sample question text?",
+                subject: "mathematics",
+                difficulty: "Easy",
+                optionA: "Option A",
+                optionB: "Option B",
+                optionC: "Option C",
+                optionD: "Option D",
+                correctAnswer: "A",
+                explanation: "This is the explanation",
+                hint: "This is a hint"
+            };
+            
+            // Populate the form
+            document.getElementById('editQuestionId').value = question.id;
+            document.getElementById('editSubject').value = question.subject;
+            document.getElementById('editDifficulty').value = question.difficulty;
+            document.getElementById('editQuestionText').value = question.questionText;
+            document.getElementById('editOptionA').value = question.optionA;
+            document.getElementById('editOptionB').value = question.optionB;
+            document.getElementById('editOptionC').value = question.optionC;
+            document.getElementById('editOptionD').value = question.optionD;
+            document.getElementById('editCorrectAnswer').value = question.correctAnswer;
+            document.getElementById('editExplanation').value = question.explanation;
+            document.getElementById('editHint').value = question.hint;
+            
+            // Show the modal
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        
+        // Close edit question modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // Delete question
+        function deleteQuestion(questionId) {
+            if (confirm('Are you sure you want to delete this question?')) {
+                // In a real app, you would send a request to your backend
+                showToast('Question deleted successfully.', 'success');
+                loadQuestions(); // Refresh the table
+            }
+        }
+        
+        // Handle edit question form submission
+        document.getElementById('editQuestionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // In a real app, you would send the updated data to your backend
+            showToast('Question updated successfully.', 'success');
+            closeEditModal();
+            loadQuestions(); // Refresh the table
+        });
+        
+        // Handle add question form submission
+        document.getElementById('questionForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // In a real app, you would send the new question data to your backend
+            showToast('Question added successfully.', 'success');
+            e.target.reset(); // Reset the form
+        });
+        
+        // Change password function
+        function changePassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            if (newPassword) {
+                // In a real app, you would send this to your backend to update the password
+                showToast('Password updated successfully.', 'success');
+                document.getElementById('newPassword').value = '';
+            } else {
+                showToast('Please enter a new password.', 'error');
+            }
+        }
+        
+        // Placeholder functions for other actions
+        function exportQuestions() {
+            showToast('Export functionality would be implemented here.', 'info');
+        }
+        
+        function backupData() {
+            showToast('Backup functionality would be implemented here.', 'info');
+        }
+        
+        function clearStats() {
+            if (confirm('Are you sure you want to clear all statistics?')) {
+                showToast('Statistics cleared successfully.', 'success');
+            }
+        }
+        
+        function resetApp() {
+            if (confirm('WARNING: This will reset all application data. Are you sure?')) {
+                showToast('Application reset would be performed here.', 'info');
+            }
+        }
+    </script>
+</body>
+</html>
